@@ -158,7 +158,6 @@ h4, .h4 {
 
 h5, .h5 {
   font-size: 1.25rem;
-  margin-bottom: 0;
 }
 
 h6, .h6 {
@@ -10557,7 +10556,7 @@ hr {
 }
 
 p {
-  margin: rem 0;
+  margin: 2rem 0;
 }
 p a {
   text-decoration: underline;
@@ -10761,7 +10760,7 @@ header.masthead .post-heading .meta a {
 .section-spacing {
   font-size: 2.25rem;
   font-weight: 700;
-  margin-top: 1.75rem;
+  margin-top: 3.75rem;
 }
 
 .caption {
