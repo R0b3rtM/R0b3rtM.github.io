@@ -31,7 +31,7 @@
                 <div class="row gx-4 gx-lg-5 justify-content-center">
                     <div class="col-md-10 col-lg-8 col-xl-7">
                         <div class="post-heading">
-                            <h1>How to easily build a cybersecurity Lab at home</h1>
+                            <h1>Memory allocator (C project)</h1>
                             <span class="meta">
                                 Last updated on October 15, 2024
                             </span>
@@ -45,40 +45,33 @@
             <div class="container px-4 px-lg-5">
                 <div class="row gx-4 gx-lg-5 justify-content-center">
                     <div class="col-md-10 col-lg-8 col-xl-7">
-                        <p>In the ever-evolving field of cybersecurity, effective learning combines theory with hands-on practice. This is where a lab environment becomes essential. In this article, I will guide you through creating a simple yet powerful cybersecurity lab on your home PC. </p>
-                        <p>This guide is made for beginners who know a bit about cybersecurity and want to use what they've learned, as well as intermediate learners looking to test new tools and expand their skills.</p>
-                        <h3>What we will use?</h3>
-                        <h2 class ="section-spacing"></h2>
-                        <h5>Hardware requirements</h5>
-                        <p>For this setup, I'm using my desktop PC, which features:</p>
+                        <h3>Project overview</h3>
+                        <p>This project is part of my journey to learn C as a Computer Science student, focusing on enhancing my understanding of addresses and pointers in the C language.</p>
+                        <h3>Understanding Memory Allocation</h3>
+                        <p>To allocate memory, we first need to assess how much is available. We can request a specific amount of memory from the system using the mmap function. Memory requests are typically made in pages, which are fixed-length contiguous blocks of virtual memory. Common page sizes are 4096 bytes. </p>
+                        <p>The <b>mmap</b> function returns a pointer to the first allocated memory address, with the last address located just after the number of bytes requested. This gives us a block of memory we can use as needed. </p>
+                        <h3>Building the allocator</h3>
+                        <p>My goal with this memory allocator is to reduce fragmentation - organizing memory to minimize wasted space and improve efficiency. To achieve this, I will implement a free list.
+                        A free list is a data structure that keeps track of free (unallocated) chunks of memory in a “pool”, allowing for efficient allocation and deallocation of memory.</p>
+                        <p>I will use structures as nodes that will be connected with each other. And every node will represent a chunk. Each node will have meta data about itself such as, the size of the node, if the node is free and a pointer to the next node. The pool itself will be a structure too, it will store data about the size of the pool, a pointer to the first node and a pointer to the start of the pool. All this meta data is essential to keep track of the memory and optimize the use of it. </p>
+                        <h4>Here is a visualization of the list:</h4>
+                        <!--Add hyperlink: <a href="#!">--><img class="img-fluid" src="assets/img/memalloc/Slide1.jpg" alt="..." /></a>
+                        <h3>The interfaces</h3>
+                        <p>In my memory allocator I'll have two functions:</p>
                         <ul>
-                            <li>Processor: AMD Ryzen 5 7600 (6 cores)</li>
-                            <li>RAM: 32 GB (16 GB can enough for smaller setups)</li>
+                            <li>The first <b>mem_alloc</b> that is going to take one argument which is the size of memory that the user want to allocate. </li>
+                            <li>The second is the <b>mem_free</b> which will take one argument, a pointer, and free the memory that its points. </li>
                         </ul>
-                        <h5>Software requirements</h5>
-                        <p>In my lab, I will simulate an environment consisting of:</p>
-                        <ul>
-                            <li><b>VirtualBox:</b> A free Type 2 hypervisor that enables the management of virtual machines.</li>
-                            <li><b>pfSense:</b> A free, open-source operating system based on FreeBSD, designed to function as a firewall and router. </li>
-                        </ul>
-                        <p>In my lab, I will simulate an environment consisting of:</p>
-                        <ul>
-                            <li>Windows server</li>
-                            <li>One Windows client machine – I recommend to use windows 10 for less resource usage. </li>
-                            <li>A Kali Linux machine – This machine is going to be an attacker machine for future attack simulations on the network. </li>
-                            <li>An Ubuntu Server for future projects – This is for my future projects.</li>
-                        </ul>
-                        <!--Network Setup-->
-                        <h3>Network setup</h3>
-                        <p>The network configuration will emulate a small enterprise environment, segmented for enhanced security and management. </p>
-                        <h5>Network segmentation</h5>
-                        <p>One best practice in cybersecurity is to separate the network into distinct segments. In my setup, there are two primary segments: </p>
-                        <!--Add hyperlink: <a href="#!">--><img class="img-fluid" src="assets/img/CyberLab/lab-topology.jpg" alt="..." /></a>
-                        <h2 class ="section-spacing"></h2>
-                        <ol>
-                            <li><b>Clients segment:</b> 10.0.1.0 Network - This segment contains regular desktop PCs running Windows 10, simulating typical end-user environments. In my lab there is also a Kali linux machine to simulate an attacker in the network.</li>
-                            <li><b>Servers segment:</b> 10.0.1.8 Network - DMZ (Demilitarized Zone), in this segment there is no access to the internet and there is stricted access to the clients segment. In this segment I located all the servers and the Splunk SIEM machine</li>
-                        </ol>
+                        <h3>How mem_alloc works?</h3>
+                        <p>The mem_alloc function begins by checking for an existing pool of memory. If no pool is found, it will create one. The function then loops through the pool, starting with the first node, to search for an available node that can accommodate the requested memory.</p>
+                        <p>Each node contains a “header” that represents the size of its metadata. The size of this header depends on the number of variables in the structure.</p>
+                        <p>For instance, if a user requests 4 bytes of memory and the header size is 24 bytes, the function will allocate a total of 28 bytes from the pool. This means it will either take a free node with a 24-byte header and at least 4 bytes available after the header or allocate a new block as needed.</p>
+                        <h4>Creating a new node</h4>
+                        <p>The last node in the pool will have its “next” pointer set to NULL, and its size will represent the remaining available space in the pool. When the function reaches the last node and finds it free, it will create a new node by allocating memory from the last node. The pointer of the new node will then be linked to the last node.</p>
+                        <h3>How mem_free works?</h3>
+                        <p>The mem_free function first updates the state of the specified node to mark it as free, allowing the memory to be reused. It then checks the next node and loops through the remaining nodes to find the node preceding the requested node. During this process, it checks whether both the previous and next nodes are free. If they are, it merges them into a single node, effectively increasing the available space.</p>
+                        <h3>Conclusion</h3>
+                        <p>In conclusion, this project has significantly enhanced my understanding of memory management and pointer usage in C. By implementing a custom memory allocator, I gained practical experience in working with dynamic memory allocation, fragmentation reduction, and data structures like free lists. The ability to effectively allocate and deallocate memory is crucial for developing efficient software, and this project has provided me with valuable insights into the underlying mechanics of memory management. As I continue my studies in computer science, the skills and knowledge acquired from this project will serve as a strong foundation for tackling more complex programming challenges in the future. </p>
                         <!--End of page body-->
                     </div>
                 </div>
